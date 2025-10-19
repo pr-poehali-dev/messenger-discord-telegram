@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -22,20 +22,24 @@ interface Channel {
 }
 
 interface Message {
-  id: string;
+  id: number;
   author: string;
   avatar: string;
   content: string;
   timestamp: string;
   reactions?: { emoji: string; count: number }[];
   role?: string;
-  roleColor?: string;
+  role_color?: string;
 }
 
 const Index = () => {
   const [selectedServer, setSelectedServer] = useState('1');
-  const [selectedChannel, setSelectedChannel] = useState('general');
+  const [selectedChannel, setSelectedChannel] = useState('1');
   const [messageInput, setMessageInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = 'https://functions.poehali.dev/c35e0155-c78a-4268-9786-9df37edce8c1';
 
   const servers: Server[] = [
     { id: '1', name: 'Главный сервер', icon: '🎮', unread: 3 },
@@ -45,54 +49,24 @@ const Index = () => {
   ];
 
   const channels: Channel[] = [
-    { id: 'general', name: 'общий', type: 'text' },
-    { id: 'memes', name: 'мемы', type: 'text' },
-    { id: 'voice-1', name: 'Голосовой чат', type: 'voice', users: 5 },
-    { id: 'stream-1', name: 'Стрим', type: 'stream', users: 2 },
-    { id: 'gaming', name: 'игры', type: 'text' },
+    { id: '1', name: 'общий', type: 'text' },
+    { id: '2', name: 'мемы', type: 'text' },
+    { id: '3', name: 'Голосовой чат', type: 'voice', users: 5 },
+    { id: '4', name: 'Стрим', type: 'stream', users: 2 },
+    { id: '5', name: 'игры', type: 'text' },
   ];
 
-  const messages: Message[] = [
-    {
-      id: '1',
-      author: 'SpaceRanger',
-      avatar: '🚀',
-      content: 'Всем привет! Кто сегодня играет?',
-      timestamp: '14:32',
-      reactions: [
-        { emoji: '👋', count: 5 },
-        { emoji: '🎮', count: 3 },
-      ],
-      role: 'ADMIN',
-      roleColor: 'text-destructive',
-    },
-    {
-      id: '2',
-      author: 'CyberNinja',
-      avatar: '⚡',
-      content: 'Я в деле! Поднимаем сервер через 10 минут',
-      timestamp: '14:35',
-      reactions: [{ emoji: '🔥', count: 2 }],
-      role: 'MOD',
-      roleColor: 'text-primary',
-    },
-    {
-      id: '3',
-      author: 'PixelMaster',
-      avatar: '🎨',
-      content: 'Закинул новые скины в файлы, проверьте!',
-      timestamp: '14:38',
-    },
-    {
-      id: '4',
-      author: 'CodeBot',
-      avatar: '🤖',
-      content: '🎉 Новый участник присоединился к серверу!',
-      timestamp: '14:40',
-      role: 'BOT',
-      roleColor: 'text-accent',
-    },
-  ];
+  useEffect(() => {
+    loadMessages();
+  }, [selectedChannel]);
+
+  const loadMessages = async () => {
+    setLoading(true);
+    const response = await fetch(`${API_URL}?channel_id=${selectedChannel}`);
+    const data = await response.json();
+    setMessages(data);
+    setLoading(false);
+  };
 
   const friends = [
     { name: 'SpaceRanger', status: 'online', game: 'CS:GO' },
@@ -101,9 +75,19 @@ const Index = () => {
     { name: 'ShadowKnight', status: 'offline' },
   ];
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (messageInput.trim()) {
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: messageInput,
+          channel_id: parseInt(selectedChannel),
+          user_id: 1,
+        }),
+      });
       setMessageInput('');
+      loadMessages();
     }
   };
 

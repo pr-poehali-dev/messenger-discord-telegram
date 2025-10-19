@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "Get messages for channel",
+      "method": "GET",
+      "path": "/?channel_id=1",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Send new message",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "content": "Test message",
+        "channel_id": 1,
+        "user_id": 1
+      },
+      "expectedStatus": 201
+    }
+  ]
+}
